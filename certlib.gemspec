@@ -4,7 +4,7 @@ Gem::Specification.new do |s|
   s.name        = 'certlib'
   s.version     = '0.0.2'
   s.date        = '2016-04-27'
-  s.summary     = 'Easily deal with certificate'
+  s.summary     = 'Easily deal with certificates'
   s.authors     = ['Cody Harris']
   s.email       = 'qbasicer@gmail.com'
   s.files       = FileList['lib/*.rb', 'lib/certlib/*']
