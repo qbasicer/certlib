@@ -1,0 +1,68 @@
+#!/usr/bin/env ruby
+
+# Docker buffers output annoyingly if this isn't true
+STDOUT.sync = true
+
+require 'certlib'
+require 'optparse'
+require 'certlib/quick'
+
+config = {}
+config[:format] = :auto
+OptionParser.new do |opts|
+	opts.banner = "Usage: certlib-quickcert [options]"
+	opts.on("--for COMMONNAME", "--cn COMMONNAME", "Server common name (aka server domain)") do |f|
+		config[:cn] = "/O=CertLib/OU=Quickcert #{CertLib.version}/CN=#{f}"
+	end
+
+	opts.on("-c CERTFILE", "Server certificate (to write to)") do |f|
+		config[:cert] = File.expand_path(f)
+		if config[:cert].end_with?(".pem")
+			config[:format] = :pem if config[:format] == :auto
+		elsif config[:cert].end_with?(".der")
+			config[:format] = :der if config[:format] == :auto
+		else
+			CertLib.logger.warn "File suffix for #{config[:cert]} is not recognized"
+		end
+	end
+
+	opts.on("-f FORMAT", "Certificate file format, supports pem or der") do |f|
+		config[:format] = f.downcase.to_sym
+	end
+
+	opts.on("-k KEY", "Server certificate key") do |f|
+		config[:key] = File.expand_path(f)
+	end
+
+	opts.on("--version") do
+		CertLib.do_version
+	end
+end.parse!
+
+raise "You did not specify a CN" if config[:cn].nil? || config[:cn].empty?
+raise "You did not specify an output key" if config[:key].nil? || config[:key].empty?
+raise "You did not specify an output certificate" if config[:cert].nil? || config[:cert].empty?
+
+rsa_key = nil
+generated = false
+unless (File.exist?(config[:key]))
+	puts "Generating new RSA key..."
+	rsa_key = OpenSSL::PKey::RSA.new(4096)
+	generated = true
+else
+	puts "Using existing key #{config[:key]}..."
+	rsa_key = OpenSSL::PKey::RSA.new(File.read(config[:key]))
+end
+
+o = CertLib::Quick.generate_certificate_with_cn(config[:cn], rsa_key)
+
+data = o.to_pem if config[:format] == :pem
+data = o.to_der if config[:format] == :der
+
+if (generated)
+	puts "Writing key to #{config[:key]}..."
+	File.open(config[:key], "w"){|f| f.write rsa_key.to_pem}
+end
+
+puts "Writing certificate to #{config[:cert]}..."
+File.open(config[:cert], "w"){|f| f.write data}
