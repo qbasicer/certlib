@@ -2,7 +2,7 @@ require 'rake'
 
 Gem::Specification.new do |s|
   s.name        = 'certlib'
-  s.version     = '0.0.3'
+  s.version     = '0.0.4'
   s.date        = '2016-06-13'
   s.summary     = 'Easily deal with certificates'
   s.authors     = ['Cody Harris']

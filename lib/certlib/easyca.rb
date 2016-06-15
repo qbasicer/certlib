@@ -25,7 +25,7 @@ module Certlib
 
 				csubject = OpenSSL::X509::Name.new asubject
 			else
-				raise "Could not determine certificate subject"
+				raise "Could not determine certificate subject, subject: #{subject.class}, cn: #{cn.class}"
 			end
 
 			csr.subject = csubject
